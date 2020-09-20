@@ -13,3 +13,5 @@ Then, I explored advanced techniques for fetching data. This includes sorting, f
 Moving forward, I learnt how to configure Node.js to support file uploads. This allows users to upload documents, profile pictures, and any other file type app might need to support. I also saw what it takes to store the uploaded files in MongoDB.
 
 Then, I added email sending to my Node.js application! This allows me to communicate with users as they use the app. This could be useful for welcome emails, notifications, and more!
+
+Lastly, I deployed the whole application on heroku. With this application I learnt how to add my custom environment variables that our needed to be configured on Heroku.
