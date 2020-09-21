@@ -1,25 +1,9 @@
 const request = require('supertest')
-const jwt = require('jsonwebtoken')
-const mongoose = require('mongoose')
 const app = require('../src/app')
-const { sendCancelationEmail } = require('../src/emails/accounts')
 const User = require('../src/models/user')
+const {userOneId, userOne, setupDB} = require('./fixtures/db')
 
-const userOneId = new mongoose.Types.ObjectId()
-const userOne = {
-    _id: userOneId,
-    name: 'AJ',
-    email: 'aj@example.com',
-    password: 'asdf1234',
-    tokens: [{
-        token: jwt.sign({_id: userOneId}, process.env.JWT_SECRET)
-    }]
-}
-
-beforeEach(async () => {
-    await User.deleteMany()
-    await new User(userOne).save()
-})
+beforeEach(setupDB)
 
 test('Should signup new user', async () => {
     const response = await request(app).post('/users').send({
@@ -86,7 +70,7 @@ test('Should delete profile for User', async () => {
     .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
     .send()
     .expect(200)
-    
+
     const user = await User.findById(userOneId)
     expect(user).toBeNull()
 })
@@ -96,4 +80,39 @@ test('Should not delete profile for unauthenticated User', async () => {
     .delete('/users/profile')
     .send()
     .expect(401)
+})
+
+test('Should upload image', async () => {
+    await request(app)
+        .post('/users/profile/avatar')
+        .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+        .attach('avatar', 'tests/fixtures/profile-pic.jpg')
+        .expect(200)
+
+    const user = await User.findById(userOneId)
+    expect(user.avatar).toEqual(expect.any(Buffer))
+})
+
+test('Should update valid user fields', async () => {
+    await request(app)
+        .patch('/users/profile')
+        .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+        .send({
+            name: 'Roger'
+        })
+        .expect(200)
+    
+        const user = await User.findById(userOneId)
+        expect(user.name).toEqual('Roger')
+
+})
+
+test('Should update invalid user fields', async () => {
+    await request(app)
+        .patch('/users/profile')
+        .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+        .send({
+            location: 'India'
+        })
+        .expect(400)
 })
